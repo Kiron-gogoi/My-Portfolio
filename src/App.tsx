@@ -26,10 +26,12 @@ import ExperienceCard from './components/ExperienceCard';
 function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const [status, setStatus] = useState("");
   const [formData,setFormData] = useState({
     name:"",email:"",message:""
   })
+
+
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
     const {name,value}=e.target;
@@ -38,28 +40,33 @@ function App() {
   }
 
   const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  const formElement = e.target as HTMLFormElement;
-  const formDataObj = new FormData(formElement);
+  
+    e.preventDefault();
 
-    formDataObj.append("access_key", "fcec693f-d4d9-4aa9-bc22-73f4ffd87d83");
+    const formDataObj = new FormData();
+    formDataObj.append("access_key", "097bf623-bf66-49a8-bd52-b3a81184ae3d");
+    formDataObj.append("name", formData.name);
+    formDataObj.append("email", formData.email);
+    formDataObj.append("message", formData.message);
 
-    const object = Object.fromEntries(formDataObj);
-    const json = JSON.stringify(object);
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formDataObj,
+      });
 
-    const res = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: json
-    }).then((res) => res.json());
-
-    if (res.success) {
-      console.log("Success", res);
+      const result = await response.json();
+      if (result.success) {
+        setStatus("✅ Message sent successfully!");
+        setFormData({ name: "", email: "", message: "" }); // reset form
+      } else {
+        setStatus("❌ Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      setStatus("❌ Network error. Please try again later.");
     }
-};
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['home', 'about', 'work', 'education', 'experience', 'skills', 'contact'];
@@ -637,6 +644,7 @@ function App() {
                   <Send className="mr-2" size={20} />
                   Send Message
                 </button>
+                 {status && <p className="mt-2 text-sm">{status}</p>}
               </form>
             </div>
           </div>
